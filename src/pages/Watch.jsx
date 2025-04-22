@@ -1,311 +1,43 @@
-// import React, { useEffect, useRef, useState } from "react";
-// import axios from "axios";
-// import { useParams } from "react-router-dom";
-// import { FaArrowLeft, FaPlay, FaPause, FaExpand, FaCompress, FaVolumeUp, FaVolumeMute } from "react-icons/fa";
-// import { saveAs } from "file-saver";
-// import { openDB } from "idb";
-
-
-
-
-// const Watch = () => {
-//     const { id } = useParams();
-//     const videoRef = useRef(null);
-//     const progressRef = useRef(null);
-
-//     const [video, setVideo] = useState(null);
-//     const [isPlaying, setIsPlaying] = useState(false);
-//     const [currentTime, setCurrentTime] = useState(0);
-//     const [duration, setDuration] = useState(0);
-//     const [volume, setVolume] = useState(1);
-//     const [isMuted, setIsMuted] = useState(false);
-//     const [isFullscreen, setIsFullscreen] = useState(false);
-//     const [showControls, setShowControls] = useState(true);
-//     const [resolutions, setResolutions] = useState([]);
-//     const [selectedResolution, setSelectedResolution] = useState("720p");
-
-//     const [progress, setProgress] = useState(0);
-
-//     useEffect(() => {
-//         const fetchVideo = async () => {
-//             try {
-//                 const res = await axios.get(`https://www.globe13.com/FF/api/api/videos/videos`);
-//                 setVideo(res.data);
-//                 setResolutions(res.data.resolutions || []);
-//             } catch (err) {
-//                 console.error("Error fetching video data:", err);
-//             }
-//         };
-//         fetchVideo();
-//     }, [id]);
-
-//     useEffect(() => {
-//         const handleFullscreenChange = () => {
-//             setIsFullscreen(!!document.fullscreenElement);
-//         };
-
-//         document.addEventListener("fullscreenchange", handleFullscreenChange);
-//         return () => {
-//             document.removeEventListener("fullscreenchange", handleFullscreenChange);
-//         };
-//     }, []);
-
-//     const handlePlayPause = () => {
-//         const videoEl = videoRef.current;
-//         if (!videoEl) return;
-//         if (videoEl.paused) {
-//             videoEl.play();
-//             setIsPlaying(true);
-//         } else {
-//             videoEl.pause();
-//             setIsPlaying(false);
-//         }
-//     };
-
-//     const toggleMute = () => {
-//         const videoEl = videoRef.current;
-//         if (!videoEl) return;
-//         videoEl.muted = !videoEl.muted;
-//         setIsMuted(videoEl.muted);
-//     };
-
-//     const handleTimeUpdate = () => {
-//         const videoEl = videoRef.current;
-//         setCurrentTime(videoEl.currentTime);
-//         setDuration(videoEl.duration);
-//         setProgress((videoEl.currentTime / videoEl.duration) * 100);
-//     };
-
-//     const handleSeek = (e) => {
-//         const progressWidth = progressRef.current.clientWidth;
-//         const clickX = e.nativeEvent.offsetX;
-//         const seekTime = (clickX / progressWidth) * duration;
-//         videoRef.current.currentTime = seekTime;
-//     };
-
-//     const toggleFullscreen = () => {
-//         const videoContainer = videoRef.current.parentElement;
-//         if (!document.fullscreenElement) {
-//             videoContainer.requestFullscreen();
-//             setIsFullscreen(true);
-//         } else {
-//             document.exitFullscreen();
-//             setIsFullscreen(false);
-//         }
-//     };
-
-//     const formatTime = (time) => {
-//         const mins = Math.floor(time / 60);
-//         const secs = Math.floor(time % 60);
-//         return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-//     };
-
-//     const handleResolutionChange = (res) => {
-//         setSelectedResolution(res);
-//         setIsPlaying(false);
-//         videoRef.current.pause();
-//         videoRef.current.load();
-//         videoRef.current.onloadedmetadata = () => {
-//             videoRef.current.currentTime = currentTime;
-//             videoRef.current.play();
-//             setIsPlaying(true);
-//         };
-//     };
-
-//     const downloadVideo = async () => {
-//         const db = await openDB("OfflineVideos", 1, {
-//             upgrade(db) {
-//                 db.createObjectStore("videos");
-//             },
-//         });
-
-//         const existing = await db.get("videos", id + "-" + selectedResolution);
-//         if (existing) {
-//             alert("Video already downloaded for offline use.");
-//             return;
-//         }
-//         console.log("Fetched video data:", res.data);
-
-
-//         const res = await axios.get(
-//             `https://www.globe13.com/FF/api/api/videos/stream/${id}?resolutions=${selectedResolution}`,
-//             { responseType: "blob" }
-//         );
-
-//         await db.put("videos", res.data, id + "-" + selectedResolution);
-//         saveAs(res.data, `${video.title}-${selectedResolution}.mp4`);
-//         alert("Video downloaded for offline viewing.");
-//     };
-
-//     const handleMouseMove = () => {
-//         setShowControls(true);
-//         clearTimeout(window.hideControlsTimeout);
-//         window.hideControlsTimeout = setTimeout(() => {
-//             setShowControls(false);
-//         }, 3000);
-//     };
-
-//     return (
-//         <div className="relative w-full h-screen bg-black" onMouseMove={handleMouseMove}>
-//             {!isFullscreen && (
-//                 <div className="absolute top-4 left-4 z-20">
-//                     <button
-//                         onClick={() => window.history.back()}
-//                         className="flex items-center text-white  rounded-full p-2 hover:bg-black/70 transition"
-//                     >
-//                         <FaArrowLeft className="w-5 h-5" />
-//                     </button>
-//                 </div>
-//             )}
-
-
-//             <video
-//                 ref={videoRef}
-//                 className="w-full h-full object-cover"
-//                 onTimeUpdate={handleTimeUpdate}
-//                 onLoadedMetadata={() => setDuration(videoRef.current.duration)}
-//                 muted={isMuted}
-//                 controls={false}
-//                 preload="auto"
-//             >
-//                 <source
-//                     src={`https://www.globe13.com/FF/api/api/videos/stream/${id}?resolutions=${selectedResolution}`}
-//                     type="video/mp4"
-//                 />
-//             </video>
-
-//             {/* Controls */}
-//             {showControls && (
-//                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent px-6 pt-10 pb-4">
-
-
-//                     {/* Progress Bar */}
-//                     <div
-//                         ref={progressRef}
-//                         className="w-full h-1 bg-gray-600 rounded-full cursor-pointer mb-2"
-//                         onClick={handleSeek}
-//                     >
-//                         <div className="h-full bg-red-600 rounded-full" style={{ width: `${progress}%` }} />
-//                     </div>
-
-//                     {/* Main Control Row */}
-//                     <div className="flex items-center justify-between text-white">
-//                         {/* Left Controls */}
-//                         <div className="flex items-center space-x-4">
-//                             <button onClick={() => (videoRef.current.currentTime -= 10)}>
-//                                 <div className="w-8 h-8 rounded-full border border-white flex items-center justify-center hover:bg-white/20 transition">
-//                                     <span className="text-sm font-bold">10</span>
-//                                 </div>
-//                             </button>
-
-//                             <button onClick={handlePlayPause}>
-//                                 {isPlaying ? (
-//                                     <FaPause className="w-6 h-6 hover:scale-110 transition" />
-//                                 ) : (
-//                                     <FaPlay className="w-6 h-6 hover:scale-110 transition" />
-//                                 )}
-//                             </button>
-
-//                             <button onClick={() => (videoRef.current.currentTime += 10)}>
-//                                 <div className="w-8 h-8 rounded-full border border-white flex items-center justify-center hover:bg-white/20 transition">
-//                                     <span className="text-sm font-bold">10</span>
-//                                 </div>
-//                             </button>
-
-//                             <button onClick={toggleMute}>
-//                                 {isMuted || volume === 0 ? (
-//                                     <FaVolumeMute className="w-5 h-5" />
-//                                 ) : (
-//                                     <FaVolumeUp className="w-5 h-5" />
-//                                 )}
-//                             </button>
-//                         </div>
-
-//                         {/* Center title */}
-//                         <div className="text-sm text-gray-300 hidden sm:block">
-//                             {video?.title}
-//                         </div>
-
-//                         {/* Right Controls */}
-//                         <div className="flex items-center space-x-4">
-//                             <span className="text-sm text-white font-light">
-//                                 {formatTime(currentTime)} / {formatTime(duration)}
-//                             </span>
-//                             <button onClick={toggleFullscreen}>
-//                                 {isFullscreen ? (
-//                                     <FaCompress className="w-5 h-5" />
-//                                 ) : (
-//                                     <FaExpand className="w-5 h-5" />
-//                                 )}
-//                             </button>
-//                         </div>
-//                     </div>
-
-//                     {/* Bottom Buttons */}
-//                     <div className="flex justify-between items-center mt-4 text-white">
-//                         <div className="flex items-center space-x-4">
-//                             {resolutions.map((res) => (
-//                                 <button
-//                                     key={res}
-//                                     className={`px-2 py-1 rounded-md text-xs border ${selectedResolution === res
-//                                             ? "bg-red-600 border-red-600 text-white"
-//                                             : "border-gray-400 text-gray-300"
-//                                         }`}
-//                                     onClick={() => handleResolutionChange(res)}
-//                                 >
-//                                     {res}
-//                                 </button>
-//                             ))}
-//                         </div>
-//                     </div>
-
-
-//                 </div>
-//             )}
-//         </div>
-//     );
-// };
-
-// export default Watch;
-
-
-import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
+  FaCog,
   FaPlay,
   FaPause,
-  FaForward,
   FaBackward,
+  FaForward,
   FaDownload,
   FaExpand,
   FaCompress,
-  FaVolumeUp,
+  FaArrowLeft,
+  FaUndo,
+  FaRedo,
   FaVolumeMute,
+  FaVolumeDown,
+  FaVolumeUp,
 } from "react-icons/fa";
-import { openDB } from "idb";
-import { FaArrowLeft } from "react-icons/fa";
-
-const resolutions = ["144p", "320p", "480p", "720p", "1080p", "2160p"];
 
 const Watch = () => {
   const { id } = useParams();
-  const videoRef = useRef(null);
-  const containerRef = useRef(null);
-  const progressRef = useRef(null);
-  const controlsTimeoutRef = useRef(null);
-
+  const [showSettings, setShowSettings] = useState(false);
   const [video, setVideo] = useState(null);
+  const [resolution, setResolution] = useState("720p");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [buffered, setBuffered] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [availableResolutions, setAvailableResolutions] = useState([]);
+  const [recommendedVideos, setRecommendedVideos] = useState([]);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const [selectedResolution, setSelectedResolution] = useState("720p");
-  const [progress, setProgress] = useState(0);
-  const [isOffline, setIsOffline] = useState(false);
+
+  const videoRef = useRef(null);
+  const controlsTimeoutRef = useRef(null);
+  const progressRef = useRef(null);
 
   useEffect(() => {
     axios
@@ -313,9 +45,96 @@ const Watch = () => {
       .then((res) => {
         const found = res.data.find((v) => v._id === id);
         setVideo(found);
+        setRecommendedVideos(res.data.filter((v) => v._id !== id));
+        if (found?.resolutions) {
+          const resolutionKeys = Object.keys(found.resolutions);
+          setAvailableResolutions(resolutionKeys);
+          if (resolutionKeys.length > 0) {
+            setResolution(resolutionKeys[resolutionKeys.length - 1]);
+          }
+        }
       })
-      .catch((err) => console.error("Video fetch error:", err));
+      .catch((err) => console.error(err));
   }, [id]);
+
+  useEffect(() => {
+    if (!video || !resolution) return;
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    const currentTime = videoElement.currentTime;
+    const wasPlaying = true;
+
+    videoElement.src = getVideoUrl(resolution);
+
+    videoElement.onloadedmetadata = () => {
+      videoElement.currentTime = currentTime;
+      if (wasPlaying) {
+        videoElement.play().then(() => setIsPlaying(true)).catch(console.warn);
+      }
+    };
+  }, [video, resolution]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  // ✅ Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (
+        ["INPUT", "TEXTAREA", "BUTTON"].includes(
+          document.activeElement.tagName
+        )
+      )
+        return;
+
+      console.log("Key Pressed:", e.code); // Debugging
+
+      if (!videoRef.current) return;
+
+      switch (e.code) {
+        case "Space":
+          e.preventDefault();
+          handlePlayPause();
+          break;
+        case "ArrowRight":
+        case "KeyD":
+          handleForward();
+          break;
+        case "ArrowLeft":
+        case "KeyA":
+          handleBackward();
+          break;
+        case "KeyF":
+          toggleFullscreen();
+          break;
+        case "KeyM":
+          setVolume((prev) => (prev === 0 ? 1 : 0));
+          break;
+        case "KeyS":
+          setShowSettings((prev) => !prev);
+          break;
+       
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume;
+    }
+  }, [volume]);
 
   const getVideoUrl = (res, isDownload = false) => {
     return isDownload
@@ -323,41 +142,59 @@ const Watch = () => {
       : `https://www.globe13.com/FF/api/api/videos/stream/${id}?resolution=${res}`;
   };
 
-  const handleResolutionChange = async (res) => {
-    setSelectedResolution(res);
-    const currentTime = videoRef.current?.currentTime || 0;
-    const key = `${id}_${res}`;
-    const db = await openDB("video-store", 2);
-    const blob = await db.get("videos", key);
+  const handleResolutionChange = (newResolution) => {
+    setResolution(newResolution);
+    setShowSettings(false); 
+  };
+  
 
-    if (blob) {
-      const offlineUrl = URL.createObjectURL(blob);
-      videoRef.current.src = offlineUrl;
-      setIsOffline(true);
-    } else {
-      videoRef.current.src = getVideoUrl(res);
-      setIsOffline(false);
-    }
-
-    videoRef.current.onloadedmetadata = () => {
-      videoRef.current.currentTime = currentTime;
-      videoRef.current.play().catch(console.warn);
-    };
+  const handleVolumeChange = (e) => {
+    const vol = parseFloat(e.target.value);
+    setVolume(vol);
   };
 
   const handlePlayPause = () => {
-    if (!videoRef.current) return;
-    if (isPlaying) videoRef.current.pause();
-    else videoRef.current.play();
-    setIsPlaying(!isPlaying);
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused || video.ended) {
+      video.play().catch(() => {});
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
   };
 
   const handleForward = () => {
-    if (videoRef.current) videoRef.current.currentTime += 10;
+    videoRef.current.currentTime = Math.min(
+      videoRef.current.duration,
+      videoRef.current.currentTime + 10
+    );
   };
 
   const handleBackward = () => {
-    if (videoRef.current) videoRef.current.currentTime -= 10;
+    videoRef.current.currentTime = Math.max(
+      0,
+      videoRef.current.currentTime - 10
+    );
+  };
+
+  const toggleFullscreen = () => {
+    const container = videoRef.current?.parentElement;
+    if (!container) return;
+    if (!document.fullscreenElement) {
+      container.requestFullscreen?.().then(() => setIsFullscreen(true));
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullscreen(false));
+    }
+  };
+
+  const handleMouseMove = () => {
+    setShowControls(true);
+    clearTimeout(controlsTimeoutRef.current);
+    controlsTimeoutRef.current = setTimeout(() => {
+      setShowControls(false);
+    }, 3000);
   };
 
   const handleTimeUpdate = () => {
@@ -366,176 +203,158 @@ const Watch = () => {
     setCurrentTime(current);
     setDuration(total);
     setProgress((current / total) * 100);
+    updateBuffered();
+  };
+
+  const updateBuffered = () => {
+    const video = videoRef.current;
+    if (!video || !video.buffered) return;
+
+    for (let i = 0; i < video.buffered.length; i++) {
+      if (
+        video.currentTime >= video.buffered.start(i) &&
+        video.currentTime <= video.buffered.end(i)
+      ) {
+        const bufferedEnd = video.buffered.end(i);
+        const bufferPercent = (bufferedEnd / video.duration) * 100;
+        setBuffered(bufferPercent);
+        break;
+      }
+    }
   };
 
   const handleSeek = (e) => {
-    const rect = progressRef.current.getBoundingClientRect();
-    const newTime = ((e.clientX - rect.left) / rect.width) * duration;
+    const boundingRect = progressRef.current.getBoundingClientRect();
+    const offsetX = e.clientX - boundingRect.left;
+    const newTime = (offsetX / boundingRect.width) * duration;
     videoRef.current.currentTime = newTime;
   };
 
-  const handleVolumeToggle = () => {
-    if (!videoRef.current) return;
-    videoRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
-  };
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch(console.error);
-    } else {
-      document.exitFullscreen();
-    }
-  };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === " " || e.key === "Enter") handlePlayPause();
-      else if (e.key === "ArrowRight") handleForward();
-      else if (e.key === "ArrowLeft") handleBackward();
-      else if (e.key.toLowerCase() === "f") toggleFullscreen();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPlaying]);
-
-  const downloadVideo = async () => {
-    const db = await openDB("video-store", 2, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains("videos")) {
-          db.createObjectStore("videos");
-        }
-      },
-    });
-
-    const url = getVideoUrl(selectedResolution, true);
-    const key = `${id}_${selectedResolution}`;
-
-    try {
-      const res = await fetch(url);
-      const reader = res.body.getReader();
-      const contentLength = +res.headers.get("Content-Length");
-      let received = 0;
-      const chunks = [];
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        received += value.length;
-        setProgress((received / contentLength) * 100);
-      }
-
-      const blob = new Blob(chunks);
-      await db.put("videos", blob, key);
-      alert("Video downloaded for offline use.");
-    } catch (err) {
-      alert("Download failed: " + err.message);
-    }
-  };
-
   const formatTime = (time) => {
-    const mins = Math.floor(time / 60);
-    const secs = Math.floor(time % 60);
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
-  const handleMouseMove = () => {
-    setShowControls(true);
-    clearTimeout(controlsTimeoutRef.current);
-    controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+  const playNextVideo = () => {
+    if (recommendedVideos.length > 0) {
+      const nextVideo = recommendedVideos[0];
+      window.location.href = `/watch/${nextVideo._id}`;
+    }
   };
 
   if (!video) return <p className="text-white p-4">Loading...</p>;
 
   return (
-    <div
-      className="bg-black text-white min-h-screen"
-      onMouseMove={handleMouseMove}
-      ref={containerRef}
-    >
-      <div className="relative w-screen h-screen overflow-hidden">
-      {!isFullscreen && (
-                <div className="absolute top-4 left-4 z-20">
-                    <button
-                        onClick={() => window.history.back()}
-                        className="flex items-center text-white  rounded-full p-2 hover:bg-black/70 transition"
-                    >
-                        <FaArrowLeft className="w-5 h-5" />
-                    </button>
-                </div>
+    <section>
+      <div
+        onMouseMove={handleMouseMove}
+        className="bg-black h-[100vh] text-white p-4"
+      >
+        <div className="max-w-5xl mx-auto flex flex-col items-center">
+          <h1 className="text-2xl font-bold mb-4 text-center">{video.title}</h1>
+          <div className="fixed inset-0 z-50 bg-black">
+            <video
+              ref={videoRef}
+              controls={false}
+              onTimeUpdate={handleTimeUpdate}
+              onProgress={updateBuffered}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={playNextVideo}
+              onWaiting={() => setIsBuffering(true)}
+              onPlaying={() => setIsBuffering(false)}
+              className="w-full h-full object-contain bg-black"
+            />
+            {isBuffering && (
+              <div className="absolute inset-0 flex justify-center items-center z-50">
+                <div className="w-16 h-16 border-4 border-t-white border-gray-600 rounded-full animate-spin"></div>
+              </div>
             )}
-        <video
-          ref={videoRef}
-          src={getVideoUrl(selectedResolution)}
-          className="w-full h-full object-cover bg-black"
-          autoPlay
-          controls={false}
-          onTimeUpdate={handleTimeUpdate}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          volume={volume}
-        />
-
-        {showControls && (
-          <div className="absolute inset-0 flex flex-col justify-end bg-black/40 transition duration-300">
-            <div className="flex justify-center items-center gap-10 py-6">
-              <button onClick={handleBackward} className="text-3xl hover:scale-110"><FaBackward /></button>
-              <button onClick={handlePlayPause} className="text-5xl hover:scale-110">
-                {isPlaying ? <FaPause /> : <FaPlay />}
-              </button>
-              <button onClick={handleForward} className="text-3xl hover:scale-110"><FaForward /></button>
-            </div>
-
-            <div className="flex flex-col px-4 pb-4">
-              <div
-                ref={progressRef}
-                className="w-full h-2 bg-gray-600 cursor-pointer relative"
-                onClick={handleSeek}
-              >
-                <div className="h-full bg-blue-500" style={{ width: `${progress}%` }} />
-                <div
-                  className="absolute top-1/2 transform -translate-y-1/2 w-3 h-3 rounded-full bg-blue-500"
-                  style={{ left: `calc(${progress}% - 6px)` }}
-                />
-              </div>
-
-              <div className="flex justify-between items-center text-sm mt-2">
-                <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
-                <div className="flex items-center gap-3">
-                  <select
-                    value={selectedResolution}
-                    onChange={(e) => handleResolutionChange(e.target.value)}
-                    className="bg-gray-800 text-white text-sm p-1 rounded"
-                  >
-                    {resolutions.map((res) => (
-                      <option key={res} value={res}>{res}</option>
-                    ))}
-                  </select>
-                  <button onClick={downloadVideo}><FaDownload /></button>
-                  <button onClick={handleVolumeToggle}>
-                    {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-                  </button>
-                  <button onClick={toggleFullscreen}>
-                    {isFullscreen ? <FaCompress /> : <FaExpand />}
+            {showControls && (
+              <div className="absolute inset-0 flex flex-col justify-between text-white">
+                <div className="flex items-center justify-between p-4">
+                  <button onClick={() => window.history.back()} className="text-xl">
+                    <FaArrowLeft />
                   </button>
                 </div>
+                <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
+                  <div
+                    ref={progressRef}
+                    className="w-full h-1 bg-white/30 cursor-pointer relative rounded-md"
+                    onClick={handleSeek}
+                  >
+                    <div
+                      className="absolute top-0 left-0 h-full bg-gray-400/60 rounded-md"
+                      style={{ width: `${buffered}%` }}
+                    />
+                    <div
+                      className="absolute top-0 left-0 h-full bg-red-600 rounded-md"
+                      style={{ width: `${progress}%` }}
+                    />
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-red-600 rounded-full shadow-md"
+                      style={{ left: `calc(${progress}% - 0.5rem)` }}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center mt-4 text-sm">
+                    <div className="flex items-center gap-4">
+                      <button onClick={handlePlayPause}>
+                        {isPlaying ? <FaPause size={20} /> : <FaPlay size={20} />}
+                      </button>
+                      <button onClick={handleBackward}><FaUndo size={18} /></button>
+                      <button onClick={handleForward}><FaRedo size={18} /></button>
+                      <div>{formatTime(currentTime)} / {formatTime(duration)}</div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-4 items-center">
+                        <span className="text-xl flex items-center gap-2">
+                          <button onClick={() => setVolume(volume === 0 ? 1 : 0)}>
+                            {volume === 0 ? <FaVolumeMute size={16} /> : volume < 0.5 ? <FaVolumeDown size={16} /> : <FaVolumeUp size={16} />}
+                          </button>
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={volume}
+                            onChange={handleVolumeChange}
+                            className="w-20 h-1 bg-gray-600 rounded appearance-none cursor-pointer"
+                          />
+                        </span>
+                        <div className="relative">
+                          <button onClick={() => setShowSettings(!showSettings)}><FaCog size={20} /></button>
+                          {showSettings && (
+                            <div className="absolute bottom-12 right-1 w-48 max-h-60 overflow-y-auto bg-black/50 border border-white/10 rounded-xl shadow-xl text-white z-50 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
+                              <div className="text-sm font-medium px-4 py-2 border-b border-white/10">Quality</div>
+                              {availableResolutions.map((r) => (
+                                <div
+                                  key={r}
+                                  onClick={() => handleResolutionChange(r)}
+                                  className={`px-4 py-2 cursor-pointer text-sm hover:bg-white/30 transition duration-150 ${resolution === r ? "text-blue-400 font-semibold" : ""}`}
+                                >
+                                  {r}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <a href={getVideoUrl(resolution, true)} download>
+                          <button><FaDownload size={16} /></button>
+                        </a>
+                        <button onClick={toggleFullscreen}>
+                          {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 
